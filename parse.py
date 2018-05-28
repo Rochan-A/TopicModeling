@@ -36,7 +36,8 @@
 
 #######################################
 
-import os, sys, json, io
+import os, json, io
+from argparse import ArgumentParser
 
 __author__ = "Rochan Avlur Venkat"
 #__copyright__ = ""
@@ -109,9 +110,17 @@ def checkNotDuplicate(lineBuf, inLine):
 
 if __name__ == '__main__':
 
-	os.chdir(sys.argv[1])
+	# Parse command-line arguments
+	parser = ArgumentParser()
+	parser.add_argument("-i", "--input-path",
+			help="Path to reviews", type=str)
+	parser.add_argument("-o", "--output-path",
+			help="Destination for parsed review output", type=str)
+	args = parser.parse_args()
+
+	os.chdir(args.input_path)
 
 	# Iterate over all the folders in the current working directory
 	currFolList = [f for f in os.listdir('.') if os.path.isdir(f)]
 	for i in range(0, len(currFolList)):
-		concateReviews(currFolList[i], sys.argv[2])
+		concateReviews(currFolList[i], args.output_path)
