@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-	This script is to be used to make the LDA model.
+	This script is to be used to train LDA and LSA models
 """
 
 #######################################
@@ -73,7 +73,6 @@ ldamodel = gensim.models.ldamodel.LdaModel(corpus, num_topics=100, id2word = dic
 # generate LSA model
 lsamodel = gensim.models.lsimodel.LsiModel(corpus, num_topics=100, id2word = dictionary)
 
-# print the models
-print(lsamodel.print_topics(num_topics=50, num_words=5))
-print('\n')
-print(ldamodel.print_topics(num_topics=50, num_words=5))
+# Save the models
+ldamodel.save(sys.argv[2] + "LDA")
+lsamodel.save(sys.argv[2] + "LSA")

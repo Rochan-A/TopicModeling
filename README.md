@@ -12,4 +12,4 @@ Generate topics from data using *[Latent Dirichlet allocation](https://en.wikipe
 
 ## Usage
 `$ alpha.py [path_to_data] [path_to_output]`
-`$ lda.py [path_to_alpha.py_output]`
+`$ lda.py [path_to_alpha.py_output] [path_to_save_models]`
