@@ -36,7 +36,7 @@
 
 #######################################
 
-import os, json, io
+import os, json, io, re
 from argparse import ArgumentParser
 
 __author__ = "Rochan Avlur Venkat"
@@ -77,6 +77,7 @@ def concateReviews(path, outFile):
 				d = json.load(f)
 
 				# Check if the review is an duplicate or not
+				d["review"] = re.sub(r"(\\u[0-z][0-z][0-z])\w", " ", d["review"])
 				if checkNotDuplicate(lineBuf, d["review"]):
 					lineBuf.append(d["review"])
 
@@ -86,6 +87,7 @@ def concateReviews(path, outFile):
 				newLine = lines[7].replace("review: ", "")
 
 				# Check if the review is an duplicate or not
+				newLine = re.sub(r"(\\u[0-z][0-z][0-z])\w", " ", newLine)
 				if checkNotDuplicate(lineBuf, newLine):
 					lineBuf.append(newLine)
 			else:
