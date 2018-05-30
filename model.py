@@ -10,6 +10,7 @@
 from nltk.stem.wordnet import WordNetLemmatizer
 import gensim.corpora as corpora
 from gensim.utils import simple_preprocess
+from gensim.models import CoherenceModel
 import gensim
 
 # Enable logging for gensim - optional
