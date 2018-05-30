@@ -188,8 +188,8 @@ if __name__ == '__main__':
 	coherence_lda = coherence_model_lda.get_coherence()
 	print('\nCoherence Score: ', coherence_lda)
 
-	model_list, coherence_values = compute_coherence_values(dictionary=id2word, corpus=corpus, texts=data_lemmatized, start=2, limit=40, step=3)
-
+	model_list, coherence_values = compute_coherence_values(dictionary=id2word, corpus=corpus, texts=data_lemmatized, start=10, limit=100, step=11)
+	x = range(start, limit, step)
 	# Print the coherence scores
 	for m, cv in zip(x, coherence_values):
 		print("Num Topics =", m, " has Coherence Value of", round(cv, 4))
