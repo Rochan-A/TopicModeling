@@ -49,11 +49,17 @@ __email__ = "rochan170543@mechyd.ac.in"
 
 #######################################
 
-"""
+def concateReviews(path, outFile):
+	"""
 	Function to concatenate all Hotel reviews that are present in the
 	current directory.
-"""
-def concateReviews(path, outFile):
+
+	Arguments:
+		path -> location of reviews
+		outFile -> destination to save parsed data
+
+	Returns nothing
+	"""
 
 	print("Changing working directory to: " + path)
 	if os.path.isdir(path):
@@ -100,10 +106,18 @@ def concateReviews(path, outFile):
 
 	os.chdir("..")
 
-"""
-	Check if the review is an duplicate or not
-"""
 def checkNotDuplicate(lineBuf, inLine):
+	"""
+	Check if the review is an duplicate or not
+
+	Arguments:
+		lineBuf -> list of strings already tested
+		inLine -> string to test
+
+	Return:
+		False -> Not duplicate
+		True -> duplicate
+	"""
 	for i in range(len(lineBuf)):
 		if lineBuf[i] == inLine:
 			return False
