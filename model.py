@@ -35,10 +35,15 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 stop_words = stopwords.words('english')
 stop_words.extend(['hi', 'hello', 'hey', 'thanks', 'thank', 'you', 'regards'])
 
-"""
-	Loads all the reviews into a list
-"""
 def loadReviews(inp_path):
+	"""
+	Loads all the reviews into a list
+
+	Arguments:
+		inp_path -> location of parsed data
+
+	Returns list of strings
+	"""
 	# Get the list of files
 	os.chdir(inp_path)
 	currFileList = [f for f in os.listdir('.') if os.path.isfile(f)]
@@ -51,25 +56,59 @@ def loadReviews(inp_path):
 				doc.append(line.encode("ascii","ignore"))
 	return doc
 
-"""
-	Tokenizes the sentences/reviews
-"""
 def sent_to_words(sentences):
+	"""
+	Tokenizes the sentences/reviews
+
+	Arguments:
+		sentences -> list of strings in sentence structure
+
+	Returns list of words
+	"""
 	for sentence in sentences:
 		yield(gensim.utils.simple_preprocess(str(sentence), deacc=True))
 
-"""
-	Define functions for stopwords, bigrams, trigrams and lemmatization
-"""
 def remove_stopwords(texts):
+	"""
+	Tokenizes, removes punctuation etc
+
+	Arguments:
+		texts -> 2 dim list of words
+
+	Returns 2 dim list of words
+	"""
 	return [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
 
-"""
+def make_bigrams(texts):
+	"""
 	Bigrams are two words frequently occurring together in the document.
 	Gensim’s Phrases model can build and implement the bigrams.
-"""
-def make_bigrams(texts):
+	"""
 	return [bigram_mod[doc] for doc in texts]
+
+def compute_coherence_values(dictionary, corpus, texts, limit, start=2, step=6):
+	"""
+	Compute c_v coherence for various number of topics
+
+	Arguments:
+		dictionary -> Gensim dictionary
+		corpus -> Gensim corpus
+		texts -> List of input texts
+		limit -> Max num of topics
+
+	Returns:
+		model_list -> List of LDA topic models
+		coherence_values -> Coherence values corresponding to the LDA model with respective number of topics
+	"""
+	coherence_values = []
+	model_list = []
+	for num_topics in range(start, limit, step):
+		model = gensim.models.wrappers.LdaMallet(mallet_path, corpus=corpus, num_topics=num_topics, id2word=id2word)
+		model_list.append(model)
+		coherencemodel = CoherenceModel(model=model, texts=texts, dictionary=dictionary, coherence='c_v')
+		coherence_values.append(coherencemodel.get_coherence())
+
+	return model_list, coherence_values
 
 if __name__ == '__main__':
 
@@ -79,7 +118,12 @@ if __name__ == '__main__':
 			help="Path to parsed reviews", type=str)
 	parser.add_argument("-o", "--output-path",
 			help="Destination of to save model", type=str)
+	parser.add_argument("-m", "--mallet-path",
+			help="Path to extracted mallet package", type=str)
 	args = parser.parse_args()
+
+	# update this path
+	mallet_path = args.mallet_path
 
 	# Load reviews into a list
 	doc_set = loadReviews(args.input_path)
@@ -110,22 +154,19 @@ if __name__ == '__main__':
 	lmtzr = WordNetLemmatizer()
 
 	# Iterate over the data and Lemmatize each word
-	lemm = []
+	data_lemmatized = []
 	for i in range(len(data_w_bigrams_unicode)):
 		k = []
 		for j in range(len(data_w_bigrams_unicode[i])):
 			k.append(lmtzr.lemmatize(data_w_bigrams_unicode[i][j]))
 
-		lemm.append(k)
+		data_lemmatized.append(k)
 
 	# Create Dictionary
-	id2word = corpora.Dictionary(lemm)
-
-	# Create Corpus
-	texts = lemm
+	id2word = corpora.Dictionary(data_lemmatized)
 
 	# Term Document Frequency
-	corpus = [id2word.doc2bow(text) for text in texts]
+	corpus = [id2word.doc2bow(text) for text in data_lemmatized]
 
 	# Build LDA model
 	lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
@@ -138,5 +179,13 @@ if __name__ == '__main__':
 						alpha='auto',
 						per_word_topics=True)
 
-	# Print the Keyword in the 10 topics
-	print(lda_model.print_topics())
+	# Compute Coherence Score
+	coherence_model_lda = CoherenceModel(model=lda_model, texts=data_lemmatized, dictionary=id2word, coherence='c_v')
+	coherence_lda = coherence_model_lda.get_coherence()
+	print('\nCoherence Score: ', coherence_lda)
+
+	model_list, coherence_values = compute_coherence_values(dictionary=id2word, corpus=corpus, texts=data_lemmatized, start=2, limit=40, step=3)
+
+	# Print the coherence scores
+	for m, cv in zip(x, coherence_values):
+		print("Num Topics =", m, " has Coherence Value of", round(cv, 4))
