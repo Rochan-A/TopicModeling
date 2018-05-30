@@ -192,7 +192,7 @@ if __name__ == '__main__':
 	limit=100
 	step=11
 
-	model_list, coherence_values = compute_coherence_values(dictionary=id2word, corpus=corpus, texts=data_lemmatized, start, limit, step)
+	model_list, coherence_values = compute_coherence_values(dictionary=id2word, corpus=corpus, texts=data_lemmatized, start = 10, limit = 100, step = 11)
 	x = range(start, limit, step)
 	# Print the coherence scores
 	for m, cv in zip(x, coherence_values):
