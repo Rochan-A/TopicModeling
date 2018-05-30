@@ -175,7 +175,7 @@ if __name__ == '__main__':
 	# Build LDA model
 	lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
 						id2word=id2word,
-						num_topics=20,
+						num_topics=65,
 						random_state=100,
 						update_every=1,
 						chunksize=100,
@@ -183,6 +183,7 @@ if __name__ == '__main__':
 						alpha='auto',
 						per_word_topics=True)
 
+	"""
 	# Compute Coherence Score
 	coherence_model_lda = CoherenceModel(model=lda_model, texts=data_lemmatized, dictionary=id2word, coherence='c_v')
 	coherence_lda = coherence_model_lda.get_coherence()
@@ -197,3 +198,7 @@ if __name__ == '__main__':
 	# Print the coherence scores
 	for m, cv in zip(x, coherence_values):
 		print("Num Topics =", m, " has Coherence Value of", round(cv, 4))
+	"""
+
+	# Save the models
+	ldamodel.save(args.output_path + "LDA")
