@@ -104,7 +104,15 @@ def compute_coherence_values(dictionary, corpus, texts, limit, start=2, step=6):
 	coherence_values = []
 	model_list = []
 	for num_topics in range(start, limit, step):
-		model = gensim.models.wrappers.LdaMallet(mallet_path, corpus=corpus, num_topics=num_topics, id2word=id2word)
+		model = gensim.models.ldamodel.LdaModel(corpus=corpus,
+						id2word=id2word,
+						num_topics=num_topics,
+						random_state=100,
+						update_every=1,
+						chunksize=100,
+						passes=10,
+						alpha='auto',
+						per_word_topics=True)
 		model_list.append(model)
 		coherencemodel = CoherenceModel(model=model, texts=texts, dictionary=dictionary, coherence='c_v')
 		coherence_values.append(coherencemodel.get_coherence())
@@ -119,12 +127,7 @@ if __name__ == '__main__':
 			help="Path to parsed reviews", type=str)
 	parser.add_argument("-o", "--output-path",
 			help="Destination of to save model", type=str)
-	parser.add_argument("-m", "--mallet-path",
-			help="Path to extracted mallet package", type=str)
 	args = parser.parse_args()
-
-	# update this path
-	mallet_path = args.mallet_path
 
 	# Load reviews into a list
 	doc_set = loadReviews(args.input_path)
