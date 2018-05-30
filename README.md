@@ -8,7 +8,7 @@ Generate topics from data using *[Latent Dirichlet allocation](https://en.wikipe
 ### Language
 `python2.7`
 ### Libraries
-`gensim` , `nptk` and `stop-word`
+`gensim` , `nptk`, `nptk wordnet` and gensims `LDAMallet`
 
 ## Usage
 `$ parse.py --help`  
