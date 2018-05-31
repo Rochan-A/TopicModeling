@@ -43,22 +43,45 @@ __author__ = "Rochan Avlur Venkat"
 #__copyright__ = ""
 #__credits__ = [""]
 #__license__ = "GPL"
-__version__ = "0.1"
+__version__ = "1.0"
 __maintainer__ = "Rochan Avlur Venkat"
 __email__ = "rochan170543@mechyd.ac.in"
 
 #######################################
+
+def checkNotDuplicate(lineBuf, inLine):
+	"""
+	Check if the review is an duplicate or not
+
+	Arguments
+	---------
+	lineBuf: list of strings already tested
+	inLine: string to test
+
+	Return
+	---------
+	False: Not duplicate
+	True: duplicate
+	"""
+	for i in range(len(lineBuf)):
+		if lineBuf[i] == inLine:
+			return False
+			break
+	return True
 
 def concateReviews(path, outFile):
 	"""
 	Function to concatenate all Hotel reviews that are present in the
 	current directory.
 
-	Arguments:
-		path -> location of reviews
-		outFile -> destination to save parsed data
+	Arguments
+	---------
+	path: location of reviews
+	outFile: destination to save parsed data
 
-	Returns nothing
+	Return
+	---------
+	None
 	"""
 
 	print("Changing working directory to: " + path)
@@ -99,30 +122,15 @@ def concateReviews(path, outFile):
 			else:
 				print("None")
 
+	# Split each line/sentence
+	lineBuf = splitsentence(lineBuf)
+
 	# Write the filtered reviews to a file
-	with io.open(outFile + path + ".txt", "w", encoding='utf8') as myfile:
+	with io.open(outFile + "out.txt", "w", encoding='utf8') as myfile:
 		for i in range(len(lineBuf)):
 			myfile.write(lineBuf[i])
 
 	os.chdir("..")
-
-def checkNotDuplicate(lineBuf, inLine):
-	"""
-	Check if the review is an duplicate or not
-
-	Arguments:
-		lineBuf -> list of strings already tested
-		inLine -> string to test
-
-	Return:
-		False -> Not duplicate
-		True -> duplicate
-	"""
-	for i in range(len(lineBuf)):
-		if lineBuf[i] == inLine:
-			return False
-			break
-	return True
 
 if __name__ == '__main__':
 

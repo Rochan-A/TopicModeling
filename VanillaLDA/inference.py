@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-	Used to infer topic from LDAmodels
+	Used to infer topic from LDA models
 """
 
 #######################################
@@ -25,7 +25,7 @@ __author__ = "Rochan Avlur Venkat"
 #__copyright__ = ""
 #__credits__ = [""]
 #__license__ = "GPL"
-__version__ = "0.1"
+__version__ = "1.0"
 __maintainer__ = "Rochan Avlur Venkat"
 __email__ = "rochan170543@mechyd.ac.in"
 
@@ -37,24 +37,30 @@ stop_words.extend(['hi', 'hello', 'hey', 'thanks', 'thank', 'you', 'regards'])
 
 def sent_to_words(sentences):
 	"""
-	Tokenizes the sentences/reviews
+	Tokenize the sentences/reviews
 
-	Arguments:
-		sentences -> list of strings in sentence structure
+	Arguments
+	---------
+	sentences: list of strings in sentence structure
 
-	Returns list of words
+	Return
+	---------
+	list of words
 	"""
 	for sentence in sentences:
 		yield(gensim.utils.simple_preprocess(str(sentence), deacc=True))
 
 def remove_stopwords(texts):
 	"""
-	Tokenizes, removes punctuation etc
+	Tokenize, removes punctuation etc
 
-	Arguments:
-		texts -> 2 dim list of words
+	Arguments
+	---------
+	texts: 2 dim list of words
 
-	Returns 2 dim list of words
+	Return
+	---------
+	2 dim list of words
 	"""
 	return [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
 
@@ -62,10 +68,13 @@ def processText(doc_set):
 	"""
 	Process each review. Tokenize, stem and lemmatize.
 
-	Arguments:
-		doc_set -> list of sentences/reviews
+	Arguments
+	---------
+	doc_set: list of sentences/reviews
 
-	Returns list of words
+	Return
+	---------
+	list of words
 	"""
 
 	# Tokenize the sentence

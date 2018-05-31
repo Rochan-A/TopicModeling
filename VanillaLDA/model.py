@@ -26,7 +26,7 @@ __author__ = "Rochan Avlur Venkat"
 #__copyright__ = ""
 #__credits__ = [""]
 #__license__ = "GPL"
-__version__ = "0.1"
+__version__ = "1.0"
 __maintainer__ = "Rochan Avlur Venkat"
 __email__ = "rochan170543@mechyd.ac.in"
 
@@ -40,10 +40,13 @@ def loadReviews(inp_path):
 	"""
 	Loads all the reviews into a list
 
-	Arguments:
-		inp_path -> location of parsed data
+	Arguments
+	---------
+	inp_path: location of parsed data
 
-	Returns list of strings
+	Return
+	---------
+	list of strings
 	"""
 	# Get the list of files
 	os.chdir(inp_path)
@@ -61,22 +64,28 @@ def sent_to_words(sentences):
 	"""
 	Tokenizes the sentences/reviews
 
-	Arguments:
-		sentences -> list of strings in sentence structure
+	Arguments
+	---------
+	sentences: list of strings in sentence structure
 
-	Returns list of words
+	Return
+	---------
+	list of words
 	"""
 	for sentence in sentences:
 		yield(gensim.utils.simple_preprocess(str(sentence), deacc=True))
 
 def remove_stopwords(texts):
 	"""
-	Tokenizes, removes punctuation etc
+	Tokenize, removes punctuation etc
 
-	Arguments:
-		texts -> 2 dim list of words
+	Arguments
+	---------
+	texts: 2 dim list of words
 
-	Returns 2 dim list of words
+	Return
+	---------
+	2 dim list of words
 	"""
 	return [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
 
@@ -84,10 +93,13 @@ def processText(doc_set):
 	"""
 	Process each review. Tokenize, stem and lemmatize.
 
-	Arguments:
-		doc_set -> list of sentences/reviews
+	Arguments
+	---------
+	doc_set: list of sentences/reviews
 
-	Returns list of words
+	Return
+	---------
+	list of words
 	"""
 
 	# Tokenize the sentence
@@ -131,15 +143,17 @@ def compute_coherence_values(dictionary, corpus, texts, limit, start=2, step=6):
 	"""
 	Compute c_v coherence for various number of topics
 
-	Arguments:
-		dictionary -> Gensim dictionary
-		corpus -> Gensim corpus
-		texts -> List of input texts
-		limit -> Max num of topics
+	Arguments
+	---------
+	dictionary: Gensim dictionary
+	corpus: Gensim corpus
+	texts: List of input texts
+	limit: Max num of topics
 
-	Returns:
-		model_list -> List of LDA topic models
-		coherence_values -> Coherence values corresponding to the LDA model with respective number of topics
+	Return
+	---------
+	model_list: List of LDA topic models
+	coherence_values: Coherence values corresponding to the LDA model with respective number of topics
 	"""
 	coherence_values = []
 	model_list = []
