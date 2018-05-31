@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-	Used to train LDA and LSA models
+	Used to train LDA models
 """
 
 #######################################
@@ -20,7 +20,7 @@ import logging
 from nltk.corpus import stopwords
 
 from argparse import ArgumentParser
-import os, codecs, re
+import os, codecs
 
 __author__ = "Rochan Avlur Venkat"
 #__copyright__ = ""
@@ -80,12 +80,52 @@ def remove_stopwords(texts):
 	"""
 	return [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
 
-def make_bigrams(texts):
+def processText(doc_set):
 	"""
-	Bigrams are two words frequently occurring together in the document.
-	Gensim’s Phrases model can build and implement the bigrams.
+	Process each review. Tokenize, stem and lemmatize.
+
+	Arguments:
+		doc_set -> list of sentences/reviews
+
+	Returns list of words
 	"""
-	return [bigram_mod[doc] for doc in texts]
+
+	# Tokenize the sentence
+	data_words = list(sent_to_words(doc_set))
+
+	# Build the bigram models
+	bigram = gensim.models.Phrases(data_words, min_count=5, threshold=100) # higher threshold fewer phrases.
+
+	# Faster way to get a sentence clubbed as a bigram
+	bigram_mod = gensim.models.phrases.Phraser(bigram)
+
+	# Remove Stop Words
+	data_words_nostops = remove_stopwords(data_words)
+
+	# Form Bigrams
+	data_words_bigrams = [bigram_mod[doc] for doc in data_words_nostops]
+
+	# Make sure words are in ascii form
+	data_w_bigrams_unicode = []
+	for i in range(len(data_words_bigrams)):
+		r =[]
+		for j in range(len(data_words_bigrams[i])):
+			r.append(unicode(data_words_bigrams[i][j].encode('ascii','ignore')))
+		data_w_bigrams_unicode.append(r)
+
+	# Initialize word Lemmatizer
+	lmtzr = WordNetLemmatizer()
+
+	# Iterate over the data and Lemmatize each word
+	data_lemmatized = []
+	for i in range(len(data_w_bigrams_unicode)):
+		k = []
+		for j in range(len(data_w_bigrams_unicode[i])):
+			k.append(lmtzr.lemmatize(data_w_bigrams_unicode[i][j]))
+
+		data_lemmatized.append(k)
+
+	return data_lemmatized
 
 def compute_coherence_values(dictionary, corpus, texts, limit, start=2, step=6):
 	"""
@@ -126,45 +166,19 @@ if __name__ == '__main__':
 	parser.add_argument("-i", "--input-path",
 			help="Path to parsed reviews", type=str)
 	parser.add_argument("-o", "--output-path",
-			help="Destination of to save model", type=str)
+			help="Destination to save model", type=str)
+	parser.add_argument("-s", "--score",
+			help="Bool for calculating coherence score", type=bool, default=False)
 	args = parser.parse_args()
+
+	# Define number of topics
+	numTopics=65
 
 	# Load reviews into a list
 	doc_set = loadReviews(args.input_path)
 
-	data_words = list(sent_to_words(doc_set))
-
-	# Build the bigram models
-	bigram = gensim.models.Phrases(data_words, min_count=5, threshold=100) # higher threshold fewer phrases.
-
-	# Faster way to get a sentence clubbed as a bigram
-	bigram_mod = gensim.models.phrases.Phraser(bigram)
-
-	# Remove Stop Words
-	data_words_nostops = remove_stopwords(data_words)
-
-	# Form Bigrams
-	data_words_bigrams = make_bigrams(data_words_nostops)
-
-	# Make sure words are in ascii form
-	data_w_bigrams_unicode = []
-	for i in range(len(data_words_bigrams)):
-		r =[]
-		for j in range(len(data_words_bigrams[i])):
-			r.append(unicode(data_words_bigrams[i][j].encode('ascii','ignore')))
-		data_w_bigrams_unicode.append(r)
-
-	# Initialize word Lemmatizer
-	lmtzr = WordNetLemmatizer()
-
-	# Iterate over the data and Lemmatize each word
-	data_lemmatized = []
-	for i in range(len(data_w_bigrams_unicode)):
-		k = []
-		for j in range(len(data_w_bigrams_unicode[i])):
-			k.append(lmtzr.lemmatize(data_w_bigrams_unicode[i][j]))
-
-		data_lemmatized.append(k)
+	# Process list of reviews
+	data_lemmatized = processText(doc_set)
 
 	# Create Dictionary
 	id2word = corpora.Dictionary(data_lemmatized)
@@ -175,7 +189,7 @@ if __name__ == '__main__':
 	# Build LDA model
 	lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
 						id2word=id2word,
-						num_topics=65,
+						num_topics=numTopics,
 						random_state=100,
 						update_every=1,
 						chunksize=100,
@@ -183,22 +197,21 @@ if __name__ == '__main__':
 						alpha='auto',
 						per_word_topics=True)
 
-	"""
-	# Compute Coherence Score
-	coherence_model_lda = CoherenceModel(model=lda_model, texts=data_lemmatized, dictionary=id2word, coherence='c_v')
-	coherence_lda = coherence_model_lda.get_coherence()
-	print('\nCoherence Score: ', coherence_lda)
+	if args.score == True:
+		# Compute Coherence Score
+		coherence_model_lda = CoherenceModel(model=lda_model, texts=data_lemmatized, dictionary=id2word, coherence='c_v')
+		coherence_lda = coherence_model_lda.get_coherence()
+		print('\nCoherence Score: ', coherence_lda)
 
-	start=10
-	limit=100
-	step=11
+		start=10
+		limit=100
+		step=11
 
-	model_list, coherence_values = compute_coherence_values(dictionary=id2word, corpus=corpus, texts=data_lemmatized, start = 10, limit = 100, step = 11)
-	x = range(start, limit, step)
-	# Print the coherence scores
-	for m, cv in zip(x, coherence_values):
-		print("Num Topics =", m, " has Coherence Value of", round(cv, 4))
-	"""
+		model_list, coherence_values = compute_coherence_values(dictionary=id2word, corpus=corpus, texts=data_lemmatized, start = 10, limit = 100, step = 11)
+		x = range(start, limit, step)
+		# Print the coherence scores
+		for m, cv in zip(x, coherence_values):
+			print("Num Topics =", m, " has Coherence Value of", round(cv, 4))
 
 	# Save the models
-	ldamodel.save(args.output_path + "LDA")
+	lda_model.save(args.output_path + "LDA")
