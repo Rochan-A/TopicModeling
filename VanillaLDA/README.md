@@ -1,4 +1,4 @@
-# TopicModel
+# VanillaLDA
 Generate topics from data using *[Latent Dirichlet allocation](https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation)* (LDA). Computes coherence to arrive at suitable topic number. Contains simple script to infer topic distribution of new string/sentence.  
 
 ## Files
