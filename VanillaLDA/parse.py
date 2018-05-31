@@ -126,7 +126,7 @@ def concateReviews(path, outFile):
 	lineBuf = splitsentence(lineBuf)
 
 	# Write the filtered reviews to a file
-	with io.open(outFile + "out.txt", "w", encoding='utf8') as myfile:
+	with io.open(outFile + path + "out.txt", "w", encoding='utf8') as myfile:
 		for i in range(len(lineBuf)):
 			myfile.write(lineBuf[i])
 
