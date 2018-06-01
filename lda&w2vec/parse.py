@@ -142,7 +142,7 @@ def readReviews(path):
 
 	return raw_review
 
-def writeProcessed(reviewBuf, path):
+def writeProcessed(reviewBuf, path, name):
 	"""
 	Function to save reviews in a list buffer.
 
@@ -150,6 +150,7 @@ def writeProcessed(reviewBuf, path):
 	---------
 	reviewBuf: parsed, preprocessed reviews
 	path: location of reviews
+	name: Name of the file
 
 	Return
 	---------
@@ -157,7 +158,7 @@ def writeProcessed(reviewBuf, path):
 	"""
 
 	# Write the preprocessed reviews to a SINGLE file unlike VanillaLDA/parse.py
-	with io.open(outFile + "out.txt", "a", encoding='utf8') as outfile:
+	with io.open(path + name + ".txt", "a", encoding='utf8') as outfile:
 		for i in range(len(reviewBuf)):
 			outfile.write(reviewBuf[i] + "\n")
 
@@ -213,7 +214,7 @@ def trainW2V(tokens, outPath):
 		workers=10)
 
 	# Train the model
-	model.train(tokens, total_examples=len(tokens), epochs=10)
+	model.train(tokens, total_examples=len(tokens), epochs=2)
 
 	# Save the model
 	model.save(fname=outPath + "w2v")
@@ -234,5 +235,5 @@ if __name__ == '__main__':
 
 	tokens, filtered = preprocess(sentence)
 
-	writeProcessed(tokens, args.output_path)
-	writeProcessed(filtered, args.output_path)
+	writeProcessed(tokens, args.output_path, "tokens")
+	writeProcessed(filtered, args.output_path, "filtered")
