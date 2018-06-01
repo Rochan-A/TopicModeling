@@ -160,7 +160,7 @@ def writeProcessed(reviewBuf, path, name):
 	# Write the preprocessed reviews to a SINGLE file unlike VanillaLDA/parse.py
 	with io.open(path + name + ".txt", "a", encoding='utf8') as outfile:
 		for i in range(len(reviewBuf)):
-			outfile.write(reviewBuf[i] + "\n")
+			outfile.write(','.join(reviewBuf[i]) + "\n")
 
 def preprocess(sentReview):
 	"""
@@ -180,15 +180,16 @@ def preprocess(sentReview):
 	for i in range(len(sentReview)):
 		tokens.append(gensim.utils.simple_preprocess(sentReview[i], deacc=True, min_len=3))
 
-	filtered = tokens
+	filtered = []
 
 	# POS Tagging and filtering sentences
 	for i in range(len(sentReview)):
 		doc = nlp(force_unicode(sentReview[i]))
+		b = []
 		for tok in doc:
-			if tok.is_stop == True or tok.pos_ == 'SYM' or tok.pos_ == 'NUM':
-				if filtered[i].__contains__(tok.text):
-					filtered[i].remove(tok.text)
+			if tok.is_stop != True and tok.pos_ != 'SYM' and tok.tag_ != 'PRP' and tok.tag_ != 'PRP$' and tok.pos_ != 'NUM' and tok.dep_ != 'aux' and tok.dep_ != 'prep' and tok.dep_ != 'det' and tok.dep_ != 'cc' and len(tok) != 1:
+				b.append(tok.lemma_)
+		filtered.append(b)
 
 	return tokens, filtered
 
