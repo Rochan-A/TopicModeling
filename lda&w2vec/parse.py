@@ -9,7 +9,7 @@
 #######################################
 
 from argparse import ArgumentParser
-import spacy, re, logging, gensim
+import spacy, re, logging, gensim, io, sys, codecs
 
 __author__ = "Rochan Avlur Venkat"
 #__copyright__ = ""
@@ -23,6 +23,52 @@ __email__ = "rochan170543@mechyd.ac.in"
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 nlp = spacy.load('en_core_web_sm')
+reload(sys)
+sys.setdefaultencoding('utf8')
+
+def force_unicode(s, encoding='utf-8', errors='ignore'):
+	"""
+	Returns a unicode object representing 's'. Treats bytestrings using the
+	'encoding' codec.
+	"""
+	if s is None:
+		return ''
+
+	try:
+		if not isinstance(s, basestring,):
+			if hasattr(s, '__unicode__'):
+				s = unicode(s)
+			else:
+				try:
+					s = unicode(str(s), encoding, errors)
+				except UnicodeEncodeError:
+					if not isinstance(s, Exception):
+						raise
+					# If we get to here, the caller has passed in an Exception
+					# subclass populated with non-ASCII data without special
+					# handling to display as a string. We need to handle this
+					# without raising a further exception. We do an
+					# approximation to what the Exception's standard str()
+					# output should be.
+					s = ' '.join([force_unicode(arg, encoding, errors) for arg in s])
+		elif not isinstance(s, unicode):
+			# Note: We use .decode() here, instead of unicode(s, encoding,
+			# errors), so that if s is a SafeString, it ends up being a
+			# SafeUnicode at the end.
+			s = s.decode(encoding, errors)
+		else:
+
+	except UnicodeDecodeError, e:
+		if not isinstance(s, Exception):
+			raise UnicodeDecodeError (s, *e.args)
+		else:
+			# If we get to here, the caller has passed in an Exception
+			# subclass populated with non-ASCII bytestring data without a
+			# working unicode method. Try to handle this without raising a
+			# further exception by individually forcing the exception args
+			# to unicode.
+			s = ' '.join([force_unicode(arg, encoding, errors) for arg in s])
+	return s
 
 def checkNotDuplicate(reviewBuf, inLine):
 	"""
@@ -88,7 +134,7 @@ def readReviews(path):
 	reviewBuf = []
 
 	# Open the file
-	with open(path,'r', encoding='utf8') as raw:
+	with io.open(path,'rb') as raw:
 		raw_review = [x.strip().split('\t') for x in raw]
 
 	# Select full review only
@@ -139,7 +185,7 @@ def preprocess(sentReview):
 
 	# POS Tagging and filtering sentences
 	for i in range(len(sentReview)):
-		doc = nlp(unicode(sentReview[i]))
+		doc = nlp(force_unicode(sentReview[i]))
 		for tok in doc:
 			if tok.is_stop == True or tok.pos_ == 'SYM' or tok.pos_ == 'NUM':
 				if filtered[i].__contains__(tok.text):
@@ -191,3 +237,4 @@ if __name__ == '__main__':
 	tokens, filtered = preprocess(sentence)
 
 	writeProcessed(tokens, args.output_path)
+	writeProcessed(filtered, args.output_path)
