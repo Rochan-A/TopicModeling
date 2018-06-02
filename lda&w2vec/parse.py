@@ -30,7 +30,18 @@ def force_unicode(s, encoding='utf-8', errors='ignore'):
 	"""
 	Returns a unicode object representing 's'. Treats bytestrings using the
 	'encoding' codec.
+
+	Arguments
+	---------
+	s: string to be encoded
+	encoding: encoding type, defaults to `utf-8`
+	errors: whether or not to ignore errors, defaults to `ignore`
+
+	Returns
+	---------
+	unicode string
 	"""
+
 	if s is None:
 		return ''
 
@@ -82,6 +93,7 @@ def checkNotDuplicate(reviewBuf, inLine):
 	False: Not duplicate
 	True: duplicate
 	"""
+
 	for i in range(len(reviewBuf)):
 		if reviewBuf[i] == inLine:
 			return False
@@ -160,7 +172,7 @@ def writeProcessed(reviewBuf, path, name):
 	# Write the preprocessed reviews to a SINGLE file unlike VanillaLDA/parse.py
 	with io.open(path + name + ".txt", "a", encoding='utf8') as outfile:
 		for i in range(len(reviewBuf)):
-			outfile.write(unicode(','.join(reviewBuf[i]) + "\n", encoding='utf8'))
+			outfile.write(unicode(','.join(reviewBuf[i]) + "\n"))
 
 def preprocess(sentReview):
 	"""
@@ -175,6 +187,7 @@ def preprocess(sentReview):
 	tokens: tokenized, de-accent and lowercased word list
 	filtered: filtered numbers, symbols, stopwords etc, list of words
 	"""
+
 	# Simple tokens, de-accent and lowercase processor
 	tokens = []
 	for i in range(len(sentReview)):
@@ -193,7 +206,7 @@ def preprocess(sentReview):
 
 	return tokens, filtered
 
-def trainW2V(tokens, outPath):
+def trainW2V(tokens, outPath, ep):
 	"""
 	Train word2vec model
 
@@ -206,6 +219,7 @@ def trainW2V(tokens, outPath):
 	---------
 	None
 	"""
+
 	# build vocabulary
 	model = gensim.models.Word2Vec(
 		tokens,
@@ -215,10 +229,10 @@ def trainW2V(tokens, outPath):
 		workers=10)
 
 	# Train the model
-	model.train(tokens, total_examples=len(tokens), epochs=2)
+	model.train(tokens, total_examples=len(tokens), epochs=ep)
 
 	# Save the model
-	model.save(fname=outPath + "w2v")
+	model.save(outPath + "w2v")
 
 if __name__ == '__main__':
 
@@ -228,15 +242,22 @@ if __name__ == '__main__':
 			help="Path to reviews", type=str)
 	parser.add_argument("-o", "--output-path",
 			help="Destination for parsed and preprocessed output", type=str)
+	parser.add_argument("-e", "--epoch",
+			help="Number of epochs", type=int)
 	args = parser.parse_args()
 
+	# Open review data file
 	raw_reviews = readReviews(args.input_path)
 
+	# Split reviews into individual sentences
 	sentence = splitsentence(raw_reviews)
 
+	# Preprocess sentences
 	tokens, filtered = preprocess(sentence)
 
-	trainW2V(tokens, args.output_path)
+	# Train the word2vec model
+	trainW2V(tokens, args.output_path, args.epoch)
 
+	# Write preprocessed data to data files
 	writeProcessed(tokens, args.output_path, "tokens")
 	writeProcessed(filtered, args.output_path, "filtered")
