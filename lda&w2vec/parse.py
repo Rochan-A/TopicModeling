@@ -160,7 +160,7 @@ def writeProcessed(reviewBuf, path, name):
 	# Write the preprocessed reviews to a SINGLE file unlike VanillaLDA/parse.py
 	with io.open(path + name + ".txt", "a", encoding='utf8') as outfile:
 		for i in range(len(reviewBuf)):
-			outfile.write(','.join(reviewBuf[i]) + "\n")
+			outfile.write(unicode(','.join(reviewBuf[i]) + "\n", encoding='utf8'))
 
 def preprocess(sentReview):
 	"""
@@ -235,6 +235,8 @@ if __name__ == '__main__':
 	sentence = splitsentence(raw_reviews)
 
 	tokens, filtered = preprocess(sentence)
+
+	trainW2V(tokens, args.output_path)
 
 	writeProcessed(tokens, args.output_path, "tokens")
 	writeProcessed(filtered, args.output_path, "filtered")
