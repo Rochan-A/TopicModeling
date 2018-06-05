@@ -206,7 +206,7 @@ def preprocess(sentReview):
 
 	return tokens, filtered
 
-def trainW2V(tokens, outPath, ep):
+def trainW2V(tokens, outPath, ep, name):
 	"""
 	Train word2vec model
 
@@ -232,7 +232,7 @@ def trainW2V(tokens, outPath, ep):
 	model.train(tokens, total_examples=len(tokens), epochs=ep)
 
 	# Save the model
-	model.save(outPath + "w2v")
+	model.save(outPath + name)
 
 if __name__ == '__main__':
 
@@ -255,9 +255,11 @@ if __name__ == '__main__':
 	# Preprocess sentences
 	tokens, filtered = preprocess(sentence)
 
-	# Train the word2vec model
-	trainW2V(tokens, args.output_path, args.epoch)
+	# Train the word2vec models
+	trainW2V(tokens, args.output_path, args.epoch, "tokW2V")
+	trainW2V(filtered, args.output_path, args.epoch, "filW2V")
 
 	# Write preprocessed data to data files
 	writeProcessed(tokens, args.output_path, "tokens")
 	writeProcessed(filtered, args.output_path, "filtered")
+	writeProcessed(sentences, args.output_path, "sentences")
