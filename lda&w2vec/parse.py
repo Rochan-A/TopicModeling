@@ -156,7 +156,7 @@ def readReviews(path):
 
 def writeProcessed(reviewBuf, path, name):
 	"""
-	Function to save reviews in a list buffer.
+	Function to save reviews in a file buffer.
 
 	Arguments
 	---------
@@ -173,6 +173,28 @@ def writeProcessed(reviewBuf, path, name):
 	with io.open(path + name + ".txt", "a", encoding='utf8') as outfile:
 		for i in range(len(reviewBuf)):
 			outfile.write(unicode(','.join(reviewBuf[i]) + "\n"))
+
+def writeSentence(sentenceBuf, path, name):
+	"""
+	Function to save sentence in a file buffer.
+
+	Arguments
+	---------
+	sentenceBuf: sentence
+	path: location of reviews
+	name: Name of the file
+
+	Return
+	---------
+	None
+	"""
+
+	# Write the preprocessed reviews to a SINGLE file unlike VanillaLDA/parse.py
+	with io.open(path + name + ".txt", "a", encoding='utf8') as outfile:
+		for i in range(len(sentenceBuf)):
+			if sentenceBuf[i][0] == ' ':
+				sentenceBuf[i] = sentenceBuf[i][1:]
+			outfile.write(unicode(sentenceBuf[i] + "\n"))
 
 def preprocess(sentReview):
 	"""
@@ -243,7 +265,7 @@ if __name__ == '__main__':
 	parser.add_argument("-o", "--output-path",
 			help="Destination for parsed and preprocessed output", type=str)
 	parser.add_argument("-e", "--epoch",
-			help="Number of epochs", type=int)
+			help="Number of epochs", type=int, default='10')
 	args = parser.parse_args()
 
 	# Open review data file
@@ -262,4 +284,4 @@ if __name__ == '__main__':
 	# Write preprocessed data to data files
 	writeProcessed(tokens, args.output_path, "tokens")
 	writeProcessed(filtered, args.output_path, "filtered")
-	writeProcessed(sentences, args.output_path, "sentences")
+	writeSentence(sentence, args.output_path, "sentences")
