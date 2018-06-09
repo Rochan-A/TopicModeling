@@ -173,7 +173,7 @@ if __name__ == '__main__':
 
 	analyzedDocument = namedtuple('AnalyzedDocument', 'words tags')
 	for i, text in enumerate(doc):
-		if args.type == 1
+		if args.type == 1:
 			words = text.lower().split()
 		else:
 			words = text.split(',')
