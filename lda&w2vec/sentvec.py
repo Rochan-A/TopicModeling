@@ -8,10 +8,9 @@
 #######################################
 
 from argparse import ArgumentParser
-import spacy, re, logging, gensim, io, sys, codecs
+import logging, gensim, io, sys, codecs
 from gensim.models import Doc2Vec
 from collections import namedtuple
-from sklearn.metrics import pairwise
 from scipy import spatial
 
 __author__ = "Rochan Avlur Venkat"
@@ -25,7 +24,6 @@ __email__ = "rochan170543@mechyd.ac.in"
 #######################################
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-nlp = spacy.load('en_core_web_sm')
 reload(sys)
 sys.setdefaultencoding('utf8')
 
@@ -188,11 +186,11 @@ if __name__ == '__main__':
 	model.save(args.output_path + "doc2vecmodel")
 
 	# Get the vectors
-	for i in range(len(doc)):
-		sen1 = model.docvecs[i].reshape(-1, 1)
-		sen2 = model.docvecs[i].reshape(-1, 1)
-		#print(model.docvecs[1])
-		print(1 - spatial.distance.cosine(sen1, sen2))
+	#for i in range(len(doc)):
+	#	sen1 = model.docvecs[i].reshape(-1, 1)
+	#	sen2 = model.docvecs[i].reshape(-1, 1)
+	#	print(model.docvecs[1])
+	#	print(1 - spatial.distance.cosine(sen1, sen2))
 
 	#writeProcessed(filtered, args.output_path, "filtered")
 	#writeSentence(sentence, args.output_path, "sentences")
