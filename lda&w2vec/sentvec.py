@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 """
-	This script is to be used to create document bins for all sentences
+	This script is to be used to train Doc2Vec model
 """
 
 #######################################
 
 from argparse import ArgumentParser
-import logging, gensim, io, sys, codecs
+import logging, io, sys, codecs
 from gensim.models import Doc2Vec
 from collections import namedtuple
 from scipy import spatial
@@ -183,14 +183,5 @@ if __name__ == '__main__':
 	# Train model (set min_count = 1, if you want the model to work with the provided example data set)
 	model = Doc2Vec(docs, vector_size = 200, window = 300, min_count = 1, workers = 3)
 
+	# Save the model
 	model.save(args.output_path + "doc2vecmodel")
-
-	# Get the vectors
-	#for i in range(len(doc)):
-	#	sen1 = model.docvecs[i].reshape(-1, 1)
-	#	sen2 = model.docvecs[i].reshape(-1, 1)
-	#	print(model.docvecs[1])
-	#	print(1 - spatial.distance.cosine(sen1, sen2))
-
-	#writeProcessed(filtered, args.output_path, "filtered")
-	#writeSentence(sentence, args.output_path, "sentences")
