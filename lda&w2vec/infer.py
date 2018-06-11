@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-	This script is to be used to segregate sentences into document bins
+	This script is to be used to infer sentence vectors
 """
 
 #######################################
@@ -93,16 +93,4 @@ if __name__ == '__main__':
 
 	model = Doc2Vec.load(args.input_path)
 
-	# Get the vectors
-	out = []
-	for i in range(len(model.docvecs)):
-		sen1 = model.docvecs[i].reshape(-1, 1)
-		o = []
-		for j in range(len(model.docvecs)):
-			sen2 = model.docvecs[j].reshape(-1, 1)
-			o.append(1 - spatial.distance.cosine(sen1, sen2))
-		out.append(o)
-
-	with open(args.output_path + "output.csv", "wb") as f:
-		writer = csv.writer(f)
-		writer.writerows(out)
+	print(1 - spatial.distance.cosine(model.infer_vector(['stayed', 'for', 'a', 'few', 'night'], alpha=0.1, min_alpha=0.0001, steps=5).reshape(-1,1), model.infer_vector(['stayed', 'for', 'a', 'couple', 'nights'], alpha=0.1, min_alpha=0.0001, steps=5).reshape(-1,1)))
