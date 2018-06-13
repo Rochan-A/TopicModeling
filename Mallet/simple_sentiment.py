@@ -142,15 +142,13 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 	# Take reviews and split into sentences
-	reviews = readReviews(args.input_path)
-	sentences = splitsentence(reviews)
+	sentences = readReviews(args.input_path)
 	tok, sent = preprocess(sentences)
+	model = Model()
 
 	for i in range(len(sentences)):
-		model = Model()
 		vec = 0
 		for k in range(len(tok[i])):
 			text_features = model.transform(tok[i][k])
 			vec = vec + text_features[0][2388]
 		print(vec, sentences[i])
-		del model
