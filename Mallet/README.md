@@ -22,3 +22,8 @@ optional arguments:
 ## Output
 
 The final inferred topics can be found in `new-topic-composition.txt`.
+
+## NOTE
+
+The input to Mallet used in the testing was unprocessed. No tokenization, stemming etc was done.
+The input was a file which contained one sentences per line.
