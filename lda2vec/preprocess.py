@@ -77,10 +77,12 @@ if __name__ == '__main__':
 	lineno = 0
 	# Open the tokenized file
 	with codecs.open(args.input_path, 'r', encoding='utf8') as File:
-		reader=csv.reader(File)
-		for row in reader:
+		for row in File:
+			token_in_row = row.split(",")
 			lineno = lineno + 1
-			readToken.append(row)
+			for i in range(len(token_in_row)):
+				token_in_row[i] = force_unicode(token_in_row[i])
+			readToken.append(token_in_row)
 
 	dic = Dictionary(readToken)
 	vocab = dict(dic)
