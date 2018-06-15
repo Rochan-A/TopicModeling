@@ -42,12 +42,11 @@ class LDA2Vec(Chain):
         pivot = F.embed_id(pivot_idx, self.sampler.W)
         sty_at_pivot = rsty_ids[window: -window]
         aut_at_pivot = raut_ids[window: -window]
-        print(move(self.xp, sty_at_pivot))
         sty = self.mixture_sty(next(move(self.xp, sty_at_pivot)))
 #        aut = self.mixture_aut(next(move(self.xp, aut_at_pivot)))
         loss = 0.0
         start, end = window, rwrd_ids.shape[0] - window
-        context = sty + F.dropout(pivot, self.dropout_ratio)# + aut
+        context = F.dropout(pivot, self.dropout_ratio) # + aut + sty
         for frame in range(-window, window + 1):
             # Skip predicting the current pivot
             if frame == 0:
@@ -56,17 +55,17 @@ class LDA2Vec(Chain):
             # The target starts before the pivot
             targetidx = rwrd_ids[start + frame: end + frame]
             sty_at_target = rsty_ids[start + frame: end + frame]
-            aut_at_target = raut_ids[start + frame: end + frame]
+#            aut_at_target = raut_ids[start + frame: end + frame]
             sty_is_same = sty_at_target == sty_at_pivot
-            aut_is_same = aut_at_target == aut_at_pivot
+#            aut_is_same = aut_at_target == aut_at_pivot
             # Randomly dropout words (default is to never do this)
             rand = np.random.uniform(0, 1, sty_is_same.shape[0])
             mask = (rand > self.word_dropout_ratio).astype('bool')
-            sty_and_aut_are_same = np.logical_and(sty_is_same, aut_is_same)
-            weight = np.logical_and(sty_and_aut_are_same, mask).astype('int32')
+#            sty_and_aut_are_same = np.logical_and(sty_is_same, aut_is_same)
+#            weight = np.logical_and(sty_and_aut_are_same, mask).astype('int32')
             # If weight is 1.0 then targetidx
             # If weight is 0.0 then -1
-            targetidx = targetidx * weight + -1 * (1 - weight)
+            targetidx = targetidx # * weight + -1 * (1 - weight)
             target, = move(self.xp, targetidx)
             loss = self.sampler(context, target)
             loss.backward()
