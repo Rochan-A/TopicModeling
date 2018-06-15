@@ -36,7 +36,7 @@ n_vocab = flattened.max() + 1
 # Number of dimensions in a single word vector
 n_units = 256
 # Number of topics to fit
-n_story_topics = 40
+n_story_topics = 10
 batchsize = 4096
 # Get the string representation for every compact key
 words = corpus.word_list(vocab)[:n_vocab]
@@ -63,6 +63,7 @@ optimizer.setup(model)
 clip = chainer.optimizer.GradientClipping(5.0)
 optimizer.add_hook(clip)
 
+author_id = story_id
 j = 0
 epoch = 0
 fraction = batchsize * 1.0 / flattened.shape[0]
@@ -75,10 +76,12 @@ for epoch in range(5000):
     ts['doc_lengths'] = sty_len
     ts['term_frequency'] = term_frequency
     np.savez('topics.story.pyldavis', **ts)
-    for s, f in utils.chunks(batchsize, story_id, flattened):
+    optimizer.use_cleargrads(use=True)
+    for s, a, f in utils.chunks(batchsize, story_id, author_id, flattened):
+        print(s, a, f)
         t0 = time.time()
-        optimizer.cleargrads()
-        l = model.fit_partial(s.copy(), f.copy())
+        optimizer.update()
+        l = model.fit_partial(s.copy(), a.copy(), f.copy())
         prior = model.prior()
         loss = prior * fraction
         loss.backward()
