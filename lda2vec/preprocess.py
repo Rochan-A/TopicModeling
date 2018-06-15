@@ -71,7 +71,7 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 	# Limit tokens per sentence
-	max_length = 100
+	max_length = 250
 
 	readToken= []
 	lineno = 0
