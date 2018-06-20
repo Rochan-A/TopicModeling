@@ -10,7 +10,7 @@ Generate topics from data using *[Latent Dirichlet allocation](https://en.wikipe
 `python2.7`
 
 ### Libraries
-`gensim` , `nptk`, `nptk wordnet` and gensims `LDAMallet`
+`spacy`, `gensim`
 
 ## Usage
 `$ parse.py --help`  

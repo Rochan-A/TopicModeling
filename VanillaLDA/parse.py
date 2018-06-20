@@ -2,60 +2,90 @@
 # -*- coding: utf-8 -*-
 
 """
-	This script is to be used to concatenate all the review data that has
-	been webscraped from the hotel sites.
-
-	Note: This only works when the collected data is in either for the
-		following template:
-
-	filename: #.txt
-
-		Reviewer Name:
-		Place:
-		Badges:
-
-		title:
-		rating:
-		Date:
-		review:
-		room tip:
-		management response:
-		traveled as:
-
-	OR
-
-	filename: #.txt
-
-		{
-			...
-			"review": ,
-			...
-		}
-
+	This script is to be used to preprocess all hotel review data before
+	passing on to lda model.
 """
 
 #######################################
 
-import os, json, io, re
 from argparse import ArgumentParser
+import spacy, re, logging, gensim, io, sys, codecs
 
 __author__ = "Rochan Avlur Venkat"
 #__copyright__ = ""
 #__credits__ = [""]
 #__license__ = "GPL"
-__version__ = "1.0"
+__version__ = "0.1"
 __maintainer__ = "Rochan Avlur Venkat"
 __email__ = "rochan170543@mechyd.ac.in"
 
 #######################################
 
-def checkNotDuplicate(lineBuf, inLine):
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+nlp = spacy.load('en_core_web_sm')
+reload(sys)
+sys.setdefaultencoding('utf8')
+
+def force_unicode(s, encoding='utf-8', errors='ignore'):
+	"""
+	Returns a unicode object representing 's'. Treats bytestrings using the
+	'encoding' codec.
+
+	Arguments
+	---------
+	s: string to be encoded
+	encoding: encoding type, defaults to `utf-8`
+	errors: whether or not to ignore errors, defaults to `ignore`
+
+	Returns
+	---------
+	unicode string
+	"""
+
+	if s is None:
+		return ''
+
+	try:
+		if not isinstance(s, basestring,):
+			if hasattr(s, '__unicode__'):
+				s = unicode(s)
+			else:
+				try:
+					s = unicode(str(s), encoding, errors)
+				except UnicodeEncodeError:
+					if not isinstance(s, Exception):
+						raise
+					# If we get to here, the caller has passed in an Exception
+					# subclass populated with non-ASCII data without special
+					# handling to display as a string. We need to handle this
+					# without raising a further exception. We do an
+					# approximation to what the Exception's standard str()
+					# output should be.
+					s = ' '.join([force_unicode(arg, encoding, errors) for arg in s])
+		elif not isinstance(s, unicode):
+			# Note: We use .decode() here, instead of unicode(s, encoding,
+			# errors), so that if s is a SafeString, it ends up being a
+			# SafeUnicode at the end.
+			s = s.decode(encoding, errors)
+	except UnicodeDecodeError, e:
+		if not isinstance(s, Exception):
+			raise UnicodeDecodeError (s, *e.args)
+		else:
+			# If we get to here, the caller has passed in an Exception
+			# subclass populated with non-ASCII bytestring data without a
+			# working unicode method. Try to handle this without raising a
+			# further exception by individually forcing the exception args
+			# to unicode.
+			s = ' '.join([force_unicode(arg, encoding, errors) for arg in s])
+	return s
+
+def checkNotDuplicate(reviewBuf, inLine):
 	"""
 	Check if the review is an duplicate or not
 
 	Arguments
 	---------
-	lineBuf: list of strings already tested
+	reviewBuf: list of strings already tested
 	inLine: string to test
 
 	Return
@@ -63,74 +93,140 @@ def checkNotDuplicate(lineBuf, inLine):
 	False: Not duplicate
 	True: duplicate
 	"""
-	for i in range(len(lineBuf)):
-		if lineBuf[i] == inLine:
+
+	for i in range(len(reviewBuf)):
+		if reviewBuf[i] == inLine:
 			return False
 			break
 	return True
 
-def concateReviews(path, outFile):
+def splitsentence(reviewBuf):
 	"""
-	Function to concatenate all Hotel reviews that are present in the
-	current directory.
+	Splits each review into its individual sentences.
+
+	Arguments
+	---------
+	reviewBuf: List of reviews (strings)
+
+	Return
+	---------
+	List of sentences.
+	"""
+
+	new = []
+	# Iterate over every unique review
+	for i in range(len(reviewBuf)):
+		# Split the sentences
+		sentences = reviewBuf[i].split('.')
+
+		# Append the other sentences to the end of the reviewBuf
+		for j in range(len(sentences)):
+			# Make sure the sentence has more than two words
+			if len(sentences[j]) > 2:
+				new.append(sentences[j])
+
+	return new
+
+def readReviews(path):
+	"""
+	Function to store reviews in a list buffer.
 
 	Arguments
 	---------
 	path: location of reviews
-	outFile: destination to save parsed data
+
+	Return
+	---------
+	list of reviews
+	"""
+
+	# Create an empty buffer to hold all the reviews
+	reviewBuf = []
+
+	# Open the file
+	with io.open(path,'rb') as raw:
+		raw_review = [x.strip().split('\t') for x in raw]
+
+	# Select full review only
+	for i in range(len(raw_review)):
+		raw_review[i] = raw_review[i][-1]
+		raw_review[i] = re.sub(r"(\\u[0-z][0-z][0-z])\w", " ", raw_review[i])
+
+	return raw_review
+
+def writeProcessed(reviewBuf, path, name):
+	"""
+	Function to save reviews in a file buffer.
+
+	Arguments
+	---------
+	reviewBuf: parsed, preprocessed reviews
+	path: location of reviews
+	name: Name of the file
 
 	Return
 	---------
 	None
 	"""
 
-	print("Changing working directory to: " + path)
-	if os.path.isdir(path):
-		os.chdir(path)
+	# Write the preprocessed reviews to a SINGLE file unlike VanillaLDA/parse.py
+	with io.open(path + name + ".txt", "a", encoding='utf8') as outfile:
+		for i in range(len(reviewBuf)):
+			outfile.write(unicode(','.join(reviewBuf[i]) + "\n"))
 
-	currFileList = [f for f in os.listdir('.') if os.path.isfile(f)]
+def writeSentence(sentenceBuf, path, name):
+	"""
+	Function to save sentence in a file buffer.
 
-	# Create an empty buffer to hold all the reviews
-	lineBuf = []
+	Arguments
+	---------
+	sentenceBuf: sentence
+	path: location of reviews
+	name: Name of the file
 
-	# Iterate over all the files inside the folder
-	for i in range(0, len(currFileList)):
-		# Open the file
-		with io.open(currFileList[i], encoding='utf8') as f:
+	Return
+	---------
+	None
+	"""
 
-			# Check the number of line in the file
-			num_lines = sum(1 for line in open(currFileList[i]))
+	# Write the preprocessed reviews to a SINGLE file unlike VanillaLDA/parse.py
+	with io.open(path + name + ".txt", "a", encoding='utf8') as outfile:
+		for i in range(len(sentenceBuf)):
+			if sentenceBuf[i][0] == ' ':
+				sentenceBuf[i] = sentenceBuf[i][1:]
+			outfile.write(unicode(sentenceBuf[i] + "\n"))
 
-			# Data is encoded in JSON format (Template 2)
-			if num_lines == 1:
-				d = json.load(f)
+def preprocess(sentReview):
+	"""
+	Processes sentences before passing on to train models
 
-				# Check if the review is an duplicate or not
-				d["review"] = re.sub(r"(\\u[0-z][0-z][0-z])\w", " ", d["review"])
-				if checkNotDuplicate(lineBuf, d["review"]):
-					lineBuf.append(d["review"])
+	Arguments
+	---------
+	sentReview: List of reviews split into sentences
 
-			# Data is encoded in template 1
-			elif num_lines == 12:
-				lines = f.readlines()
-				newLine = lines[7].replace("review: ", "")
+	Returns
+	---------
+	tokens: tokenized, de-accent and lowercased word list
+	filtered: filtered numbers, symbols, stopwords etc, list of words
+	"""
 
-				# Check if the review is an duplicate or not
-				newLine = re.sub(r"(\\u[0-z][0-z][0-z])\w", " ", newLine)
-				if checkNotDuplicate(lineBuf, newLine):
-					lineBuf.append(newLine)
-			else:
-				print("None")
+	# Simple tokens, de-accent and lowercase processor
+	tokens = []
+	for i in range(len(sentReview)):
+		tokens.append(gensim.utils.simple_preprocess(sentReview[i], deacc=True, min_len=3))
 
-	# Split each line/sentence
-	lineBuf = splitsentence(lineBuf)
+	filtered = []
 
-	# Write the filtered reviews to a file
-	with io.open(outFile + path + "out.txt", "w", encoding='utf8') as myfile:
-		for i in range(len(lineBuf)):
-			myfile.write(lineBuf[i])
+	# POS Tagging and filtering sentences
+	for i in range(len(sentReview)):
+		doc = nlp(force_unicode(sentReview[i]))
+		b = []
+		for tok in doc:
+			if tok.is_stop != True and tok.pos_ != 'SYM' and tok.tag_ != 'PRP' and tok.tag_ != 'PRP$' and tok.pos_ != 'NUM' and tok.dep_ != 'aux' and tok.dep_ != 'prep' and tok.dep_ != 'det' and tok.dep_ != 'cc' and len(tok) != 1:
+				b.append(tok.lemma_)
+		filtered.append(b)
 
-	os.chdir("..")
+	return tokens, filtered
 
 if __name__ == '__main__':
 
@@ -139,12 +235,19 @@ if __name__ == '__main__':
 	parser.add_argument("-i", "--input-path",
 			help="Path to reviews", type=str)
 	parser.add_argument("-o", "--output-path",
-			help="Destination for parsed review output", type=str)
+			help="Destination for parsed and preprocessed output", type=str)
 	args = parser.parse_args()
 
-	os.chdir(args.input_path)
+	# Open review data file
+	raw_reviews = readReviews(args.input_path)
 
-	# Iterate over all the folders in the current working directory
-	currFolList = [f for f in os.listdir('.') if os.path.isdir(f)]
-	for i in range(0, len(currFolList)):
-		concateReviews(currFolList[i], args.output_path)
+	# Split reviews into individual sentences
+	sentence = splitsentence(raw_reviews)
+
+	# Preprocess sentences
+	tokens, filtered = preprocess(sentence)
+
+	# Write preprocessed data to data files
+	writeProcessed(tokens, args.output_path, "tokens")
+	writeProcessed(filtered, args.output_path, "filtered")
+	writeSentence(sentence, args.output_path, "sentences")

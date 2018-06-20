@@ -7,7 +7,6 @@
 
 #######################################
 
-from nltk.stem.wordnet import WordNetLemmatizer
 import gensim.corpora as corpora
 from gensim.utils import simple_preprocess
 from gensim.models import CoherenceModel
@@ -15,9 +14,6 @@ import gensim
 
 # Enable logging for gensim - optional
 import logging
-
-# NLTK Stop words
-from nltk.corpus import stopwords
 
 from argparse import ArgumentParser
 import os, codecs
@@ -33,32 +29,70 @@ __email__ = "rochan170543@mechyd.ac.in"
 #######################################
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.ERROR)
-stop_words = stopwords.words('english')
-stop_words.extend(['hi', 'hello', 'hey', 'thanks', 'thank', 'you', 'regards'])
 
-def loadReviews(inp_path):
+def force_unicode(s, encoding='utf-8', errors='ignore'):
 	"""
-	Loads all the reviews into a list
+	Returns a unicode object representing 's'. Treats bytestrings using the
+	'encoding' codec.
 
 	Arguments
 	---------
-	inp_path: location of parsed data
+	s: string to be encoded
+	encoding: encoding type, defaults to `utf-8`
+	errors: whether or not to ignore errors, defaults to `ignore`
 
-	Return
+	Returns
 	---------
-	list of strings
+	unicode string
 	"""
-	# Get the list of files
-	os.chdir(inp_path)
-	currFileList = [f for f in os.listdir('.') if os.path.isfile(f)]
 
-	# Load the lines
-	doc = []
-	for i in range(len(currFileList)):
-		with codecs.open(currFileList[i], "r", encoding='utf8') as f:
-			for line in f:
-				doc.append(line.encode("ascii","ignore"))
-	return doc
+	if s is None:
+		return ''
+
+	try:
+		if not isinstance(s, basestring,):
+			if hasattr(s, '__unicode__'):
+				s = unicode(s)
+			else:
+				try:
+					s = unicode(str(s), encoding, errors)
+				except UnicodeEncodeError:
+					if not isinstance(s, Exception):
+						raise
+					# If we get to here, the caller has passed in an Exception
+					# subclass populated with non-ASCII data without special
+					# handling to display as a string. We need to handle this
+					# without raising a further exception. We do an
+					# approximation to what the Exception's standard str()
+					# output should be.
+					s = ' '.join([force_unicode(arg, encoding, errors) for arg in s])
+		elif not isinstance(s, unicode):
+			# Note: We use .decode() here, instead of unicode(s, encoding,
+			# errors), so that if s is a SafeString, it ends up being a
+			# SafeUnicode at the end.
+			s = s.decode(encoding, errors)
+	except UnicodeDecodeError, e:
+		if not isinstance(s, Exception):
+			raise UnicodeDecodeError (s, *e.args)
+		else:
+			# If we get to here, the caller has passed in an Exception
+			# subclass populated with non-ASCII bytestring data without a
+			# working unicode method. Try to handle this without raising a
+			# further exception by individually forcing the exception args
+			# to unicode.
+			s = ' '.join([force_unicode(arg, encoding, errors) for arg in s])
+	return s
+
+def loadReviews(inp_path):
+
+	readToken= []
+	with codecs.open(inp_path, 'r', encoding='utf8') as File:
+		for row in File:
+			token_in_row = row.split(",")
+			for i in range(len(token_in_row)):
+				token_in_row[i] = force_unicode(token_in_row[i])
+			readToken.append(token_in_row)
+	return readToken
 
 def sent_to_words(sentences):
 	"""
@@ -88,56 +122,6 @@ def remove_stopwords(texts):
 	2 dim list of words
 	"""
 	return [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
-
-def processText(doc_set):
-	"""
-	Process each review. Tokenize, stem and lemmatize.
-
-	Arguments
-	---------
-	doc_set: list of sentences/reviews
-
-	Return
-	---------
-	list of words
-	"""
-
-	# Tokenize the sentence
-	data_words = list(sent_to_words(doc_set))
-
-	# Build the bigram models
-	bigram = gensim.models.Phrases(data_words, min_count=5, threshold=100) # higher threshold fewer phrases.
-
-	# Faster way to get a sentence clubbed as a bigram
-	bigram_mod = gensim.models.phrases.Phraser(bigram)
-
-	# Remove Stop Words
-	data_words_nostops = remove_stopwords(data_words)
-
-	# Form Bigrams
-	data_words_bigrams = [bigram_mod[doc] for doc in data_words_nostops]
-
-	# Make sure words are in ascii form
-	data_w_bigrams_unicode = []
-	for i in range(len(data_words_bigrams)):
-		r =[]
-		for j in range(len(data_words_bigrams[i])):
-			r.append(unicode(data_words_bigrams[i][j].encode('ascii','ignore')))
-		data_w_bigrams_unicode.append(r)
-
-	# Initialize word Lemmatizer
-	lmtzr = WordNetLemmatizer()
-
-	# Iterate over the data and Lemmatize each word
-	data_lemmatized = []
-	for i in range(len(data_w_bigrams_unicode)):
-		k = []
-		for j in range(len(data_w_bigrams_unicode[i])):
-			k.append(lmtzr.lemmatize(data_w_bigrams_unicode[i][j]))
-
-		data_lemmatized.append(k)
-
-	return data_lemmatized
 
 def compute_coherence_values(dictionary, corpus, texts, limit, start=2, step=6):
 	"""
@@ -189,10 +173,7 @@ if __name__ == '__main__':
 	numTopics=65
 
 	# Load reviews into a list
-	doc_set = loadReviews(args.input_path)
-
-	# Process list of reviews
-	data_lemmatized = processText(doc_set)
+	data_lemmatized = loadReviews(args.input_path)
 
 	# Create Dictionary
 	id2word = corpora.Dictionary(data_lemmatized)
