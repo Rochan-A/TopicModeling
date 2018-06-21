@@ -33,7 +33,7 @@ if __name__ == '__main__':
 			help="Path to labels", type=str)
 	parser.add_argument("-q", "--query",
 			help="Path to original query file (sentence form)", type=str)
-	parser.add_argument("-t", "--topics",
+	parser.add_argument("-t", "--ptopics",
 			help="Number of topics to print for each sentence", type=int, default=5)
 	parser.add_argument("-T", "--inf-topics",
 			help="Number of topics whose probabilities are given in the inference output", type=int, default=100)
@@ -78,11 +78,11 @@ if __name__ == '__main__':
 		topic = dict((j, topics[i][j]) for j in range(0, num_topics))
 		h.append(topic)
 
-	# Identify the top args.topics topics
+	# Identify the top args.ptopics topics
 	for i in range(0, len(topics)):
-		val = sorted(h[i].values(), reverse=False)[0:args.topics]
+		val = sorted(h[i].values(), reverse=False)[0:args.ptopics]
 		index = []
-		for k in range(args.topics):
+		for k in range(args.ptopics):
 			v = h[i].keys()[h[i].values().index(val[k])]
 			index.append(labels[v][:-1])
 		# Print them

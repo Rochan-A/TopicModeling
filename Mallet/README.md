@@ -19,11 +19,36 @@ optional arguments:
   -o OUTPUT_PATH, --output-path OUTPUT_PATH	Destination of inferred topics
 ```  
 
+`$ python simple_sentiment.py -h`  
+```
+usage: simple_sentiment.py [-h] [-i INPUT_PATH] [-o OUTPUT_PATH]
+
+optional arguments:
+  -h,             --help                      show this help message and exit
+  -i INPUT_PATH,  --input-path INPUT_PATH     Path to reviews
+  -o OUTPUT_PATH, --output-path OUTPUT_PATH   Destination of inferred topics
+```  
+
+`$ python label.py -h`  
+```
+usage: clustering.py [-h] [-i TOPICS] [-l LABELS] [-q QUERY] [-t PTOPICS] [-T INF_TOPICS] [-o OUTPUT_PATH]
+
+optional arguments:
+  -h,             --help                      show this help message and exit
+  -i TOPICS,      --topics TOPICS             Path to inference output
+  -l LABELS,      --labels LABELS             Path to labels
+  -q QUERY,       --query QUERY               Path to original query file (sentence form)
+  -t PTOPICS,     --ptopics PTOPICS           Number of topics to print for each sentence
+  -T INF_TOPICS,  --inf-topics INF_TOPICS     Number of topics whose probabilities are given in the inference output
+  -o OUTPUT_PATH, --output-path OUTPUT_PATH   Destination of sampled topics
+```
+
+
 ## Output
 
-The final inferred topics can be found in `new-topic-composition.txt`.
+The final inferred topics can be found in `new-topic-composition.txt`. Other output samples are also present.
 
 ## NOTE
 
 The input to Mallet used in the testing was unprocessed. No tokenization, stemming etc was done.
-The input was a file which contained one sentences per line.
+The input was a file contained one sentences per line.
