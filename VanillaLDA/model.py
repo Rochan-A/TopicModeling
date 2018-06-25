@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-	Used to train LDA models
+	Used to train LDA models and LDAMallet
 """
 
 #######################################
@@ -94,35 +94,6 @@ def loadReviews(inp_path):
 			readToken.append(token_in_row)
 	return readToken
 
-def sent_to_words(sentences):
-	"""
-	Tokenizes the sentences/reviews
-
-	Arguments
-	---------
-	sentences: list of strings in sentence structure
-
-	Return
-	---------
-	list of words
-	"""
-	for sentence in sentences:
-		yield(gensim.utils.simple_preprocess(str(sentence), deacc=True))
-
-def remove_stopwords(texts):
-	"""
-	Tokenize, removes punctuation etc
-
-	Arguments
-	---------
-	texts: 2 dim list of words
-
-	Return
-	---------
-	2 dim list of words
-	"""
-	return [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
-
 def compute_coherence_values(dictionary, corpus, texts, limit, start=2, step=6):
 	"""
 	Compute c_v coherence for various number of topics
@@ -167,10 +138,14 @@ if __name__ == '__main__':
 			help="Destination to save model", type=str)
 	parser.add_argument("-s", "--score",
 			help="Bool for calculating coherence score", type=bool, default=False)
+	parser.add_argument("-t", "--topic-number",
+			help="Number of topics to train the model for", type=int, default=100)
+	parser.add_argument("-o", "--mallet-path",
+			help="Path to mallet's bin file (ie. Mallet/bin/mallet)", type=str)
 	args = parser.parse_args()
 
 	# Define number of topics
-	numTopics=65
+	numTopics=args.topic_number
 
 	# Load reviews into a list
 	data_lemmatized = loadReviews(args.input_path)
@@ -192,6 +167,23 @@ if __name__ == '__main__':
 						alpha='auto',
 						per_word_topics=True)
 
+	# LDAMallet
+	mallet_path = args.mallet_path
+	lda_model_mallet = gensim.models.wrappers.LdaMallet(mallet_path,
+						corpus=corpus,
+						num_topics=numTopics,
+						alpha=65,
+						id2word=id2word,
+						workers=6,
+						prefix=None,
+						optimize_interval=10,
+						iterations=5000,
+						topic_threshold=0.0)
+
+	lda_model.save(args.output_path + "LDA")
+	lda_model_mallet.save(args.output_path + "LDA-Mallet")
+	lda_model_mallet.print_topics(num_topics=-1, num_words=10)
+
 	if args.score == True:
 		# Compute Coherence Score
 		coherence_model_lda = CoherenceModel(model=lda_model, texts=data_lemmatized, dictionary=id2word, coherence='c_v')
@@ -207,6 +199,3 @@ if __name__ == '__main__':
 		# Print the coherence scores
 		for m, cv in zip(x, coherence_values):
 			print("Num Topics =", m, " has Coherence Value of", round(cv, 4))
-
-	# Save the models
-	lda_model.save(args.output_path + "LDA")
