@@ -5,3 +5,5 @@ lda2vec/data*
 lda2vec/tokens
 lda2vec/vocab
 *.pyc
+postprocess/counts
+postprocess/weights
