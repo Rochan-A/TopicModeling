@@ -195,7 +195,6 @@ def sortNormalize(c_weight, num, top_words):
 	# Normalize the weights
 	norm = []
 	for i in range(args.topic_number):
-		print([flo for (word, flo) in sorted_weights[i]])
 		normalize = sum([flo for (word, flo) in sorted_weights[i]])
 		temp = []
 		for j in range(10):
@@ -250,7 +249,7 @@ if __name__ == '__main__':
 	weights = compute_weight(parsed, args.topic_number, args.alpha)
 
 	# Sort in decending order and Normalize the weights
-	nomalized = sortNormalize(weights, args.topic_number, args.top_words)
+	normalized = sortNormalize(weights, args.topic_number, args.top_words)
 
 	# Save the word/terms weights
-	saveCSV(normalize, args.output_path)
+	saveCSV(normalized, args.output_path)
