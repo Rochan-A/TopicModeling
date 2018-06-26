@@ -29,8 +29,8 @@ if __name__ == '__main__':
 	parser = ArgumentParser()
 	parser.add_argument("-i", "--input-path", \
 			help="Path to LDA Mallet", type=str)
-	parser.add_argument("-n", "--topic-number", \
-			help="number of topics", type=int, default=100)
+	parser.add_argument("-l", "--label", \
+			help="Path to label file", type=str)
 	ARGS = parser.parse_args()
 
 	# Load the LDA mallet model
@@ -57,14 +57,22 @@ if __name__ == '__main__':
 		for row in matrix:
 			spamwriter.writerow(row)
 
+	# Read the labels file if present
+	cities = []
+	if ARGS.label != None:
+		with open(ARGS.label, 'r') as F:
+			spamwriter = csv.reader(F)
+			for row in spamwriter:
+				cities.append(row)
+
 	data = matrix
 
 	# Separate the distance values from the labels
 	dists = []
-	cities = []
 	for d in data:
-		cities.append(d[0])
 		dists.append(map(float, d[1:]))
+		if len(cities) == 0:
+			cities.append(d[0])
 
 	adist = np.array(dists)
 	amax = np.amax(adist)
