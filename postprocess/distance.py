@@ -31,12 +31,6 @@ if __name__ == '__main__':
 			help="Path to LDA Mallet", type=str)
 	parser.add_argument("-n", "--topic-number", \
 			help="number of topics", type=int, default=100)
-	parser.add_argument("-t", "--top-words", \
-			help="number of top terms/words per topic to calculate for", type=int, default=10)
-	parser.add_argument("-a", "--alpha", \
-			help="Alpha value", type=float, default=5.0)
-	parser.add_argument("-o", "--output-path", \
-			help="Destination to topic word weights", type=str)
 	ARGS = parser.parse_args()
 
 	# Load the LDA mallet model

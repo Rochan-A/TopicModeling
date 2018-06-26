@@ -14,3 +14,4 @@ Each folder is named according to the training method or library used.
 |[lda2vec Original](https://github.com/cemoody/lda2vec/), [lda2vec used](https://github.com/Rochan-A/lda2vec)| Mix the best parts of word2vec and LDA into a single framework|
 |depriciated| Gensim LDA and LSI|
 |lda&w2vec| Incomplete custom training algorithm|
+|postprocess| Scripts to process output from MALLET and Gensim LDAMallet|

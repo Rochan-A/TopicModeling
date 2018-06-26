@@ -7,3 +7,4 @@ lda2vec/vocab
 *.pyc
 postprocess/counts
 postprocess/weights
+postprocess/LDA-Mallet*
