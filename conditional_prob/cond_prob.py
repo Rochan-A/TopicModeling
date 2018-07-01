@@ -35,13 +35,11 @@ def open_doc_file(file_path):
 	"""
 
 	matrix = []
-	count = 0
 	with open(file_path, 'r') as F:
 		reader = csv.reader(F, delimiter='\t')
 		for row in reader:
 			del row[1]
 			matrix.append(row)
-			count += 1
 
 	return matrix
 
