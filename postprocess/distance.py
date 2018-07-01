@@ -9,6 +9,7 @@
 
 import csv, gensim
 import numpy as np
+import operator
 from argparse import ArgumentParser
 import matplotlib.pyplot as plt
 from sklearn import manifold
