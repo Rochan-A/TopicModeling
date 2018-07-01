@@ -34,9 +34,9 @@ def loadReviews(inp_path):
 	# Load the lines
 	doc = []
 	for i in range(len(currFileList)):
-	with codecs.open(currFileList[i], "r", encoding='utf-8') as f:
-		for line in f:
-			doc.append(line)
+		with codecs.open(currFileList[i], "r", encoding='utf-8') as f:
+			for line in f:
+				doc.append(line)
 	return doc
 
 if __name__ == '__main__':
