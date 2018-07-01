@@ -1,10 +1,3 @@
 .vscode/
-doc2vec/*
-lda2vec/corpus
-lda2vec/data*
-lda2vec/tokens
-lda2vec/vocab
 *.pyc
-postprocess/counts
-postprocess/weights
-postprocess/LDA-Mallet*
+testing/

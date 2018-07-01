@@ -12,6 +12,9 @@ Each folder is named according to the training method or library used.
 |[VanillaLDA](https://radimrehurek.com/gensim/models/ldamodel.html)| Gensim LDA implementation|
 |[Mallet](http://mallet.cs.umass.edu/index.php)| MAchine Learning for LanguagE Toolkit|
 |[lda2vec Original](https://github.com/cemoody/lda2vec/), [lda2vec used](https://github.com/Rochan-A/lda2vec)| Mix the best parts of word2vec and LDA into a single framework|
-|depriciated| Gensim LDA and LSI|
+|depriciated| Gensim LDA and LSA|
 |lda&w2vec| Incomplete custom training algorithm|
 |postprocess| Scripts to process output from MALLET and Gensim LDAMallet|
+|conditional_prob| Scripts to generate a conditional probability matrix
+|sample| sample data for testing
+|output| sample outputs
