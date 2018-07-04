@@ -123,7 +123,7 @@ def splitsentence(reviewBuf):
 		for j in range(len(sentences)):
 			# Make sure the sentence has more than two words
 			if len(sentences[j]) > 2:
-				new.append(sentences[j])
+				new.append([i, sentences[j]])
 
 	return new
 
@@ -213,17 +213,21 @@ def preprocess(sentReview):
 	# Simple tokens, de-accent and lowercase processor
 	tokens = []
 	for i in range(len(sentReview)):
-		tokens.append(gensim.utils.simple_preprocess(sentReview[i], deacc=True, min_len=3))
+		tokens.append(gensim.utils.simple_preprocess(sentReview[1][i], deacc=True, min_len=3))
 
 	filtered = []
 
 	# POS Tagging and filtering sentences
 	for i in range(len(sentReview)):
-		doc = nlp(force_unicode(sentReview[i]))
+		doc = nlp(force_unicode(sentReview[i][1]))
 		b = []
 		for tok in doc:
-			if tok.is_stop != True and tok.pos_ != 'SYM' and tok.tag_ != 'PRP' and tok.tag_ != 'PRP$' and tok.pos_ != 'NUM' and tok.dep_ != 'aux' and tok.dep_ != 'prep' and tok.dep_ != 'det' and tok.dep_ != 'cc' and len(tok) != 1:
-				b.append(tok.lemma_)
+			if tok.is_stop != True and tok.pos_ != 'SYM' and \
+				tok.tag_ != 'PRP' and tok.tag_ != 'PRP$' and \
+				tok.pos_ != 'NUM' and tok.dep_ != 'aux' and \
+				tok.dep_ != 'prep' and tok.dep_ != 'det' and \
+				tok.dep_ != 'cc' and len(tok) > 1:
+				b.append([sentReview[i][0], tok.lemma_])
 		filtered.append(b)
 
 	return tokens, filtered
@@ -232,9 +236,9 @@ if __name__ == '__main__':
 
 	# Parse command-line arguments
 	parser = ArgumentParser()
-	parser.add_argument("-i", "--input-path",
+	parser.add_argument("-i", "--input-path", \
 			help="Path to reviews", type=str)
-	parser.add_argument("-o", "--output-path",
+	parser.add_argument("-o", "--output-path", \
 			help="Destination for parsed and preprocessed output", type=str)
 	args = parser.parse_args()
 
