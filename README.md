@@ -15,6 +15,4 @@ Each folder is named according to the training method or library used.
 |depriciated| Gensim LDA and LSA|
 |lda&w2vec| Incomplete custom training algorithm|
 |postprocess| Scripts to process output from MALLET and Gensim LDAMallet|
-|conditional_prob| Scripts to generate a conditional probability matrix
-|sample| sample data for testing
-|output| sample outputs
+|conditional_prob| Scripts to generate a conditional probability matrix |

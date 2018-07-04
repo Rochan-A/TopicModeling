@@ -4,6 +4,19 @@ Construct a topic Conditional Probability Matrix.
 
 ## Usage
 
+Parse the reviews ( Similar to [this](../VanillaLDA/parse.py) but filtered.txt will have an extra column on review number):
+
+`$ python parse.py -h`
+
+```
+usage: parse.py [-h] [-i INPUT_PATH] [-o OUTPUT_PATH]
+
+optional arguments:
+  -h, --help					show this help message and exit
+  -i INPUT_PATH, --input-path INPUT_PATH	Path to reviews
+  -o OUTPUT_PATH, --output-path OUTPUT_PATH	Destination for parsed and preprocessed output
+```
+
 Compute the conditional probability matrix:
 
 `$ python cond_prob.py -h`
