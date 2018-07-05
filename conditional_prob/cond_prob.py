@@ -38,102 +38,55 @@ def open_doc_file(file_path):
 	with open(file_path, 'r') as F:
 		reader = csv.reader(F, delimiter='\t')
 		for row in reader:
-			del row[1]
-			matrix.append(row)
+			# Delete the first two columns in the file
+			matrix.append(row[2:])
 
 	return matrix
 
-def open_rev_file(file_path):
+def open_filtered(file_path):
 	"""
-	Open the reviews file and save the number of sentences in each review
+	Get the review number for every sentence used
 
 	Arguments
 	---------
-	file_path: Location of the reviews file
+	file_path: Path to filtered.txt
 
 	Returns
-	--------
-	Number of sentences in each review
+	-------
+	List of review numbers
 	"""
 
-	# Open the file
-	with io.open(file_path, 'rb') as raw:
-		raw_review = [x.strip().split('\t') for x in raw]
+	matrix = []
+	with open(file_path, 'r') as F:
+		reader = csv.reader(F, delimiter=',')
+		for row in reader:
+			matrix.append(row[0])
 
-	# Select full review only
-	for i in range(len(raw_review)):
-		raw_review[i] = len(raw_review[i][-1].split('.'))
+	return matrix
 
-	return raw_review
-
-def filter_topic(doc_matrix, num_sent, num_topics):
+def construct_matrix(doc_matrix, reviews, num_sent, num_topics):
 	"""
+	Construct a simple frequency matrix of each topic (current sentence)
+	vs topic (next sentence)
 	Identify the topics with high probabilities for each sentence
 
 	Arguments
 	---------
 	doc_matrix: Matrix of topic probabilities for each sentence
-	num_sent: Number of sentences
-	num_topics: Number of topics
+	reviews: list of number of lines per review
+	num_topics: number of topics
+	num_sent: number of sentences
 
 	Returns
-	---------
-	top: List of highest probabilities
+	-------
+	A numpy array of size (num_topics, num_topics), dtype = int
 	topic_freq: total number of topics chosen
 	"""
 
 	# Create a dictionary of all the topic frequencies
 	topic_freq = dict()
-	for i in range(0, num_topics - 1):
+	for i in range(0, num_topics):
 		topic_freq[i] = 0
-
-	# Iterate over all the sentences
-	top = []
-	for i in range(num_sent):
-
-		# Create a dictionary of all the probabilities for a sentence
-		topic_dict = dict()
-		for j in range(1, num_topics):
-			topic_dict[j] = ast.literal_eval(doc_matrix[i][j])
-
-		# Sort the topics versus the probabilities
-		sorted_topic_dict = sorted(topic_dict.items(), key=operator.itemgetter(1), reverse=True)
-
-		# Choose the top few topics (ie. till their probabilities add up to one-third)
-		prob_uptill = 0.0
-		tmp = []
-		for j in range(num_topics):
-
-			# Threshold
-			if prob_uptill < 0.9:
-
-				# Keep track of total probability
-				prob_uptill += sorted_topic_dict[j][1]
-
-				# Save topic chosen
-				tmp += [sorted_topic_dict[j][0]]
-
-				# Keep track of topic freq
-				topic_freq[sorted_topic_dict[j][0]] += 1
-		top.append(tmp)
-
-	return top, topic_freq
-
-def construct_matrix(selected_topic, reviews, num_topics):
-	"""
-	Construct a simple frequency matrix of each topic (current sentence)
-	vs topic (next sentence)
-
-	Arguments
-	---------
-	selected_topics: Output of filter_topic
-	reviews: list of number of lines per review
-	num_topics: number of topics
-
-	Returns
-	-------
-	A numpy array of size (num_topics, num_topics), dtype = int
-	"""
 
 	# Construct an empty matrix
 	freq_matrix = np.zeros((num_topics, num_topics), dtype=float)
@@ -141,25 +94,52 @@ def construct_matrix(selected_topic, reviews, num_topics):
 	# Append values to the matrix
 	line_no = 0
 
-	# Iterate over all the reviews
-	for k in reviews:
+	# Iterate over all the sentences - 1
+	for i in range(num_sent - 1):
 
-		# If the review has more than one line
-		if reviews[k] > 1:
+		if reviews[i] == reviews[i + 1]:
 
-			# Iterate over all the sentences in the review
-			for i in range(line_no, reviews[k] - 1):
-				curr_topics = selected_topic[i]
-				next_topics = selected_topic[i+1]
+			# Create a dictionary of all the probabilities for the two sentences
+			topic_dict = [dict(), dict()]
+			for j in range(0, num_topics):
+				topic_dict[0][j] = ast.literal_eval(doc_matrix[i][j])
+				topic_dict[1][j] = ast.literal_eval(doc_matrix[i + 1][j])
 
-				for x in curr_topics:
-					for y in next_topics:
-						freq_matrix[x][y] += 1
+			# Sort the topics versus the probabilities
+			sorted_topic_dict = [sorted(topic_dict[0].items(), \
+				key=operator.itemgetter(1), reverse=True), \
+					sorted(topic_dict[1].items(), \
+					key=operator.itemgetter(1), reverse=True)]
 
-		# Keep track of the next line_no to read
-		line_no += reviews[k]
+			# Choose the top few topics (ie. till their probabilities add up to one-third)
+			prob_uptill = [0.0, 0.0]
+			tmp = [[], []]
+			for j in range(num_topics):
 
-	return freq_matrix
+				# Threshold
+				if prob_uptill[0] < 0.9:
+
+					# Keep track of total probability
+					prob_uptill[0] += sorted_topic_dict[0][j][1]
+
+					# Save topic chosen
+					tmp[0] += [sorted_topic_dict[0][j][0]]
+
+				# Threshold
+				if prob_uptill[1] < 0.9:
+
+					# Keep track of total probability
+					prob_uptill[1] += sorted_topic_dict[1][j][1]
+
+					# Save topic chosen
+					tmp[1] += [sorted_topic_dict[1][j][0]]
+
+			for x in tmp[0]:
+				for y in tmp[1]:
+					freq_matrix[x][y] += 1.0
+					topic_freq[x] += 1.0
+
+	return freq_matrix, topic_freq
 
 def compute_cond(freq_matrix, topic_freq, num_topics):
 	"""
@@ -177,13 +157,10 @@ def compute_cond(freq_matrix, topic_freq, num_topics):
 	"""
 
 	# Conditional probability
-	for i in range(num_topics - 1):
-		for j in range(num_topics - 1):
-			try:
+	for i in range(num_topics):
+		for j in range(num_topics):
+			if float(topic_freq[i]) != 0:
 				freq_matrix[i][j] = float(freq_matrix[i][j])/float(topic_freq[i])
-			except ZeroDivisionError:
-				freq_matrix[i][j] = 0.0
-
 	return freq_matrix
 
 if __name__ == '__main__':
@@ -192,8 +169,8 @@ if __name__ == '__main__':
 	parser = ArgumentParser()
 	parser.add_argument("-i", "--input-path", \
 			help="Path to document probabilities", type=str)
-	parser.add_argument("-r", "--ori-reviews", \
-			help="Path to document with original reviews file", type=str)
+	parser.add_argument("-f", "--filtered", \
+			help="Path to filtered file", type=str)
 	parser.add_argument("-o", "--output-path", \
 			help="Path to output conditional probabilities matrix", type=str)
 	ARGS = parser.parse_args()
@@ -201,8 +178,8 @@ if __name__ == '__main__':
 	# Open the doc - topics file
 	doc_matrix = open_doc_file(ARGS.input_path)
 
-	# Open the original reviews file
-	reviews = open_rev_file(ARGS.ori_reviews)
+	# Open the filtered file
+	reviews = open_filtered(ARGS.filtered)
 
 	# Number of sentences
 	NUM_SENT = len(doc_matrix)
@@ -210,11 +187,8 @@ if __name__ == '__main__':
 	# Number of topics
 	NUM_TOPICS = len(doc_matrix[0])
 
-	# Select the topic with highest probability
-	selected_topic, topic_freq = filter_topic(doc_matrix, NUM_SENT, NUM_TOPICS)
-
 	# Construct the frequency matrix
-	freq_matrix = construct_matrix(selected_topic, reviews, NUM_TOPICS)
+	freq_matrix, topic_freq = construct_matrix(doc_matrix, reviews, NUM_SENT, NUM_TOPICS)
 
 	# Compute conditional probabilities
 	cond_prob = compute_cond(freq_matrix, topic_freq, NUM_TOPICS)

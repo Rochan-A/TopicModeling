@@ -174,28 +174,6 @@ def writeProcessed(reviewBuf, path, name):
 		for i in range(len(reviewBuf)):
 			outfile.write(unicode(','.join(reviewBuf[i]) + "\n"))
 
-def writeSentence(sentenceBuf, path, name):
-	"""
-	Function to save sentence in a file buffer.
-
-	Arguments
-	---------
-	sentenceBuf: sentence
-	path: location of reviews
-	name: Name of the file
-
-	Return
-	---------
-	None
-	"""
-
-	# Write the preprocessed reviews to a SINGLE file unlike VanillaLDA/parse.py
-	with io.open(path + name + ".txt", "a", encoding='utf8') as outfile:
-		for i in range(len(sentenceBuf)):
-			if sentenceBuf[i][0] == ' ':
-				sentenceBuf[i] = sentenceBuf[i][1:]
-			outfile.write(unicode(sentenceBuf[i] + "\n"))
-
 def preprocess(sentReview):
 	"""
 	Processes sentences before passing on to train models
@@ -206,17 +184,10 @@ def preprocess(sentReview):
 
 	Returns
 	---------
-	tokens: tokenized, de-accent and lowercased word list
 	filtered: filtered numbers, symbols, stopwords etc, list of words
 	"""
 
-	# Simple tokens, de-accent and lowercase processor
-	tokens = []
-	for i in range(len(sentReview)):
-		tokens.append(gensim.utils.simple_preprocess(sentReview[1][i], deacc=True, min_len=3))
-
 	filtered = []
-
 	# POS Tagging and filtering sentences
 	for i in range(len(sentReview)):
 		doc = nlp(force_unicode(sentReview[i][1]))
@@ -227,10 +198,11 @@ def preprocess(sentReview):
 				tok.pos_ != 'NUM' and tok.dep_ != 'aux' and \
 				tok.dep_ != 'prep' and tok.dep_ != 'det' and \
 				tok.dep_ != 'cc' and len(tok) > 1:
-				b.append([sentReview[i][0], tok.lemma_])
+				b += [force_unicode(sentReview[i][0])]
+				b.append(tok.lemma_)
 		filtered.append(b)
 
-	return tokens, filtered
+	return filtered
 
 if __name__ == '__main__':
 
@@ -249,9 +221,7 @@ if __name__ == '__main__':
 	sentence = splitsentence(raw_reviews)
 
 	# Preprocess sentences
-	tokens, filtered = preprocess(sentence)
+	filtered = preprocess(sentence)
 
 	# Write preprocessed data to data files
-	writeProcessed(tokens, args.output_path, "tokens")
 	writeProcessed(filtered, args.output_path, "filtered")
-	writeSentence(sentence, args.output_path, "sentences")
