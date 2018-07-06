@@ -7,7 +7,7 @@
 
 #######################################
 
-import csv, io, operator, ast
+import csv, io, operator, ast, codecs
 from argparse import ArgumentParser
 import numpy as np
 
@@ -57,10 +57,14 @@ def open_filtered(file_path):
 	"""
 
 	matrix = []
-	with open(file_path, 'r') as F:
-		reader = csv.reader(F, delimiter=',')
+	with open(file_path, 'rU') as F:
+		reader = csv.reader((line.replace('\0','') for line in F), delimiter=',')
 		for row in reader:
-			matrix.append(row[0])
+			try:
+				if len(row) > 0:
+					matrix.append(int(row[0]))
+			except:
+				print('Some error while reading the row')
 
 	return matrix
 
@@ -97,47 +101,50 @@ def construct_matrix(doc_matrix, reviews, num_sent, num_topics):
 	# Iterate over all the sentences - 1
 	for i in range(num_sent - 1):
 
-		if reviews[i] == reviews[i + 1]:
+		try:
+			if reviews[i] == reviews[i + 1]:
 
-			# Create a dictionary of all the probabilities for the two sentences
-			topic_dict = [dict(), dict()]
-			for j in range(0, num_topics):
-				topic_dict[0][j] = ast.literal_eval(doc_matrix[i][j])
-				topic_dict[1][j] = ast.literal_eval(doc_matrix[i + 1][j])
+				# Create a dictionary of all the probabilities for the two sentences
+				topic_dict = [dict(), dict()]
+				for j in range(0, num_topics):
+					topic_dict[0][j] = ast.literal_eval(doc_matrix[i][j])
+					topic_dict[1][j] = ast.literal_eval(doc_matrix[i + 1][j])
 
-			# Sort the topics versus the probabilities
-			sorted_topic_dict = [sorted(topic_dict[0].items(), \
-				key=operator.itemgetter(1), reverse=True), \
-					sorted(topic_dict[1].items(), \
-					key=operator.itemgetter(1), reverse=True)]
+				# Sort the topics versus the probabilities
+				sorted_topic_dict = [sorted(topic_dict[0].items(), \
+					key=operator.itemgetter(1), reverse=True), \
+						sorted(topic_dict[1].items(), \
+						key=operator.itemgetter(1), reverse=True)]
 
-			# Choose the top few topics (ie. till their probabilities add up to one-third)
-			prob_uptill = [0.0, 0.0]
-			tmp = [[], []]
-			for j in range(num_topics):
+				# Choose the top few topics (ie. till their probabilities add up to one-third)
+				prob_uptill = [0.0, 0.0]
+				tmp = [[], []]
+				for j in range(num_topics):
 
-				# Threshold
-				if prob_uptill[0] < 0.9:
+					# Threshold
+					if prob_uptill[0] < 0.9:
 
-					# Keep track of total probability
-					prob_uptill[0] += sorted_topic_dict[0][j][1]
+						# Keep track of total probability
+						prob_uptill[0] += sorted_topic_dict[0][j][1]
 
-					# Save topic chosen
-					tmp[0] += [sorted_topic_dict[0][j][0]]
+						# Save topic chosen
+						tmp[0] += [sorted_topic_dict[0][j][0]]
 
-				# Threshold
-				if prob_uptill[1] < 0.9:
+					# Threshold
+					if prob_uptill[1] < 0.9:
 
-					# Keep track of total probability
-					prob_uptill[1] += sorted_topic_dict[1][j][1]
+						# Keep track of total probability
+						prob_uptill[1] += sorted_topic_dict[1][j][1]
 
-					# Save topic chosen
-					tmp[1] += [sorted_topic_dict[1][j][0]]
+						# Save topic chosen
+						tmp[1] += [sorted_topic_dict[1][j][0]]
 
-			for x in tmp[0]:
-				for y in tmp[1]:
-					freq_matrix[x][y] += 1.0
-					topic_freq[x] += 1.0
+				for x in tmp[0]:
+					for y in tmp[1]:
+						freq_matrix[x][y] += 1.0
+						topic_freq[x] += 1.0
+		except:
+			print('Review not found')
 
 	return freq_matrix, topic_freq
 
